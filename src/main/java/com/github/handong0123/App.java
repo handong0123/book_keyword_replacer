@@ -3,6 +3,8 @@ package com.github.handong0123;
 import com.github.handong0123.epub.EpubReplacer;
 import com.github.handong0123.pdf.PdfReplacer;
 import com.github.handong0123.txt.TxtReplacer;
+import com.github.handong0123.word.DocReplacer;
+import com.github.handong0123.word.DocxReplacer;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
@@ -14,24 +16,14 @@ public class App {
     private JButton buttonStart;
     private JTextField textPath;
     private JTextField textStartNo;
-    private JTextField textOld1;
-    private JTextField textNew1;
-    private JTextField textOld2;
-    private JTextField textNew2;
-    private JTextField textOld3;
-    private JTextField textNew3;
-    private JTextField textOld4;
-    private JTextField textNew4;
     private JPanel panelWindow;
     private JPanel panelButton;
     private JPanel panelPathChoose;
     private JPanel panelStartNo;
     private JPanel panelText;
     private JPanel panelReplace1;
-    private JPanel panelReplace2;
-    private JPanel panelReplace3;
-    private JPanel panelReplace4;
     private JButton buttonFileChooser;
+    private JTextArea textAreaReplace;
 
 
     public App() {
@@ -69,17 +61,13 @@ public class App {
             }
             int noLength = startNo.length();
             Map<String, String> replaceMap = new HashMap<>();
-            if (StringUtils.isNotBlank(textOld1.getText())) {
-                replaceMap.put(textOld1.getText(), textNew1.getText());
-            }
-            if (StringUtils.isNotBlank(textOld2.getText())) {
-                replaceMap.put(textOld2.getText(), textNew2.getText());
-            }
-            if (StringUtils.isNotBlank(textOld3.getText())) {
-                replaceMap.put(textOld3.getText(), textNew3.getText());
-            }
-            if (StringUtils.isNotBlank(textOld4.getText())) {
-                replaceMap.put(textOld4.getText(), textNew4.getText());
+            String[] items = textAreaReplace.getText().split("\n");
+            for (String item : items) {
+                String[] pair = item.split("->");
+                if (pair.length != 2) {
+                    continue;
+                }
+                replaceMap.put(pair[0], pair[1]);
             }
             File[] directories = workPath.listFiles();
             if (null == directories || directories.length == 0) {
@@ -99,7 +87,7 @@ public class App {
                 String directoryName = String.format("%0" + noLength + "d", start) + directory.getName();
                 start++;
                 File newDirectory = new File(newWordPath, directoryName);
-                if(!newDirectory.mkdir()){
+                if (!newDirectory.mkdir()) {
                     continue;
                 }
                 for (File f : files) {
@@ -113,6 +101,10 @@ public class App {
                         EpubReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     } else if (fileName.toLowerCase().endsWith(".pdf")) {
                         PdfReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                    } else if (fileName.toLowerCase().endsWith(".doc")) {
+                        DocReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                    } else if (fileName.toLowerCase().endsWith(".docx")) {
+                        DocxReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     }
                 }
             }
@@ -131,10 +123,5 @@ public class App {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
-        long expired = 1574092799000L;
-        if (System.currentTimeMillis() > expired) {
-            JOptionPane.showMessageDialog(null, "软件已过期", "提醒", JOptionPane.WARNING_MESSAGE);
-            System.exit(1);
-        }
     }
 }

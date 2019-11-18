@@ -30,14 +30,7 @@ import java.util.regex.Pattern;
  * @author handong
  */
 public class PdfReplacer {
-
     private static final Pattern PATTERN = Pattern.compile("[\\u4e00-\\u9fa5]");
-
-    public static void main(String[] args) {
-        Map<String, String> map = new HashMap<>();
-        map.put("公众号", "微信号");
-        replace("D:\\外快\\小说替换\\test\\会说话的人，都拥有开挂的人生xg\\会说话的人，都拥有开挂的人生xg.pdf", "D:\\外快\\小说替换\\test_new\\会说话的人，都拥有开挂的人生xg\\会说话的人，都拥有开挂的人生xg.pdf", map);
-    }
 
     /**
      * 替换pdf中的字符串
