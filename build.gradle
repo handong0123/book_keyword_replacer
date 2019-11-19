@@ -33,12 +33,12 @@ jar {
 }
 
 repositories {
-    mavenCentral()
-    maven {url 'https://github.com/psiegman/mvn-repo/raw/master/releases'}
     maven {url "http://maven.aliyun.com/nexus/content/groups/public/" }
     maven {url "https://maven.aliyun.com/repository/jcenter" }
     maven {url "https://maven.aliyun.com/repository/google" }
     maven {url "https://maven.aliyun.com/repository/central" }
+    mavenCentral()
+    maven {url 'https://github.com/psiegman/mvn-repo/raw/master/releases'}
     maven {url "https://artifact.aspose.com/repo/"}
 }
 

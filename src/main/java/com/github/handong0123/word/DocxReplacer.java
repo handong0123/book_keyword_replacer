@@ -1,16 +1,19 @@
 package com.github.handong0123.word;
 
-import java.io.*;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTFonts;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTR;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTRPr;
+
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author handong
@@ -23,16 +26,18 @@ public class DocxReplacer {
      * @param output
      * @param replaceMap
      */
-    public static void replace(String input, String output, Map<String, String> replaceMap) {
+    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         try (InputStream is = new FileInputStream(input);
              OutputStream os = new FileOutputStream(output)) {
             XWPFDocument doc = new XWPFDocument(is);
             // 替换段落里面的变量
             replaceInPara(doc, replaceMap);
             doc.write(os);
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 
     /**

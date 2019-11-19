@@ -39,9 +39,9 @@ public class PdfReplacer {
      * @param output     新PDF
      * @param replaceMap 替换词Map
      */
-    public static void replace(String input, String output, Map<String, String> replaceMap) {
+    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         Map<String, List<MatchItem>> matchResultMap = matchAll(input, new ArrayList<>(replaceMap.keySet()));
-        manipulatePdf(input, output, matchResultMap, replaceMap);
+        return manipulatePdf(input, output, matchResultMap, replaceMap);
     }
 
     /**
@@ -154,7 +154,7 @@ public class PdfReplacer {
      * @param src  目标pdf路径
      * @param dest 新pdf的路径
      */
-    private static void manipulatePdf(String src, String dest, Map<String, List<MatchItem>> matchItems, Map<String, String> replaceMap) {
+    private static boolean manipulatePdf(String src, String dest, Map<String, List<MatchItem>> matchItems, Map<String, String> replaceMap) {
         try (OutputStream outputStream = new FileOutputStream(dest)) {
             PdfReader reader = new PdfReader(src);
             PdfStamper stamper = new PdfStamper(reader, outputStream);
@@ -202,8 +202,10 @@ public class PdfReplacer {
             }
             stamper.close();
             reader.close();
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 }

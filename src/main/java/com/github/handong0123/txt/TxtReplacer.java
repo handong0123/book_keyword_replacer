@@ -1,10 +1,9 @@
 package com.github.handong0123.txt;
 
 import java.io.FileWriter;
-import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,22 +12,26 @@ import java.util.Map;
  */
 public class TxtReplacer {
 
-    public static void replace(String input, String output, Map<String, String> replaceMap) {
+    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         try (FileWriter fileWriter = new FileWriter(output)) {
-            List<String> lineList = Files.readAllLines(Paths.get(input));
-            lineList.forEach(l -> {
+            String encoding = EncodeUtils.getEncode(input);
+            List<String> lineList;
+            if ("GBK".equals(encoding)) {
+                lineList = Files.readAllLines(Paths.get(input), Charset.forName("GBK"));
+            } else {
+                lineList = Files.readAllLines(Paths.get(input));
+            }
+            for (String l : lineList) {
                 String line = l;
                 for (Map.Entry<String, String> entry : replaceMap.entrySet()) {
                     line = line.replace(entry.getKey(), entry.getValue());
                 }
-                try {
-                    fileWriter.write(line + "\n");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
+                fileWriter.write(line + "\n");
+            }
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 }

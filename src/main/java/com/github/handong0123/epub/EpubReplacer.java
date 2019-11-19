@@ -22,10 +22,13 @@ public class EpubReplacer {
      * @param output     新文件
      * @param replaceMap 替换词Map
      */
-    public static void replace(String input, String output, Map<String, String> replaceMap) {
+    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         Book book = readBook(input);
+        if(null == book){
+            return false;
+        }
         modifyBook(book, replaceMap);
-        writeBook(book, output);
+        return writeBook(book, output);
     }
 
 
@@ -74,12 +77,14 @@ public class EpubReplacer {
      * @param book     book
      * @param fileName 新文件名
      */
-    private static void writeBook(Book book, String fileName) {
+    private static boolean writeBook(Book book, String fileName) {
         EpubWriter epubWriter = new EpubWriter();
         try (OutputStream output = new FileOutputStream(fileName)) {
             epubWriter.write(book, output);
+            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return false;
     }
 }

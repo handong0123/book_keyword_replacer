@@ -9,7 +9,9 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.swing.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class App {
@@ -21,10 +23,13 @@ public class App {
     private JPanel panelPathChoose;
     private JPanel panelStartNo;
     private JPanel panelText;
-    private JPanel panelReplace1;
     private JButton buttonFileChooser;
     private JTextArea textAreaReplace;
+    private JProgressBar progressBar1;
+    private JButton buttonStop;
+    private JList listResult;
 
+    private ThreadTask thread;
 
     public App() {
         buttonFileChooser.addActionListener(e -> {
@@ -37,6 +42,8 @@ public class App {
             }
         });
         buttonStart.addActionListener(e -> {
+            buttonStart.setEnabled(false);
+            listResult.setListData(new Object[0]);
             String filePath = textPath.getText();
             String startNo = textStartNo.getText();
             if (StringUtils.isBlank(filePath)) {
@@ -74,8 +81,84 @@ public class App {
                 JOptionPane.showMessageDialog(null, "空文件夹", "提醒", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            thread = new ThreadTask(workPath, directories, noLength, start, replaceMap);
+            thread.start();
+            progressBar1.setIndeterminate(true);
+        });
+        buttonStop.addActionListener(e -> thread.setStop(true));
+    }
+
+    public static void main(String[] args) {
+        try {
+            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
+            e.printStackTrace();
+        }
+        JFrame frame = new JFrame("文件内容关键词替换器");
+        frame.setContentPane(new App().panelWindow);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+        frame.setVisible(true);
+    }
+
+    /**
+     * 迭代删除文件夹
+     *
+     * @param dirPath 文件夹路径
+     */
+    private static void deleteDir(String dirPath) {
+        File file = new File(dirPath);
+        if (file.isFile()) {
+            file.delete();
+        } else {
+            File[] files = file.listFiles();
+            if (files == null) {
+                file.delete();
+            } else {
+                for (int i = 0; i < files.length; i++) {
+                    deleteDir(files[i].getAbsolutePath());
+                }
+                file.delete();
+            }
+        }
+    }
+
+
+    class ThreadTask extends Thread {
+
+        private File workPath;
+        private File[] directories;
+        private int noLength;
+        private int start;
+        private Map<String, String> replaceMap;
+
+        /**
+         * 标记变量可见性，从主存中读取变量最新值
+         */
+        private volatile boolean stop = false;
+
+        public void setStop(boolean stop) {
+            this.stop = stop;
+        }
+
+        List<String> failedList = new ArrayList<>();
+
+        ThreadTask(File workPath, File[] directories, int noLength, int start, Map<String, String> replaceMap) {
+            this.workPath = workPath;
+            this.directories = directories;
+            this.noLength = noLength;
+            this.start = start;
+            this.replaceMap = replaceMap;
+        }
+
+        @Override
+        public void run() {
             String newWordPath = workPath.getAbsolutePath() + "_new";
-            new File(newWordPath).mkdir();
+            File root = new File(newWordPath);
+            if (!root.mkdirs()) {
+                deleteDir(newWordPath);
+                root.mkdirs();
+            }
             for (File directory : directories) {
                 if (directory.isFile()) {
                     continue;
@@ -91,37 +174,38 @@ public class App {
                     continue;
                 }
                 for (File f : files) {
+                    if (stop) {
+                        progressBar1.setIndeterminate(false);
+                        JOptionPane.showMessageDialog(null, "任务已终止", "提醒", JOptionPane.WARNING_MESSAGE);
+                        buttonStart.setEnabled(true);
+                        return;
+                    }
                     if (f.isDirectory()) {
                         continue;
                     }
                     String fileName = f.getName();
+                    boolean flag = true;
                     if (fileName.toLowerCase().endsWith(".txt")) {
-                        TxtReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                        flag = TxtReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     } else if (fileName.toLowerCase().endsWith(".epub")) {
-                        EpubReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                        flag = EpubReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     } else if (fileName.toLowerCase().endsWith(".pdf")) {
-                        PdfReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                        flag = PdfReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     } else if (fileName.toLowerCase().endsWith(".doc")) {
-                        DocReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                        flag = DocReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     } else if (fileName.toLowerCase().endsWith(".docx")) {
-                        DocxReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                        flag = DocxReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
+                    }
+                    if (!flag) {
+                        failedList.add(directory.getName());
+                        break;
                     }
                 }
             }
+            progressBar1.setIndeterminate(false);
+            listResult.setListData(failedList.toArray(new String[0]));
             JOptionPane.showMessageDialog(null, "替换完成", "提醒", JOptionPane.WARNING_MESSAGE);
-        });
-    }
-
-    public static void main(String[] args) {
-        try {
-            UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
-        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
-            e.printStackTrace();
+            buttonStart.setEnabled(true);
         }
-        JFrame frame = new JFrame("文件内容关键词替换器");
-        frame.setContentPane(new App().panelWindow);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.pack();
-        frame.setVisible(true);
     }
 }

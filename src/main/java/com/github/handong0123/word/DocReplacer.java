@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class DocReplacer {
 
-    public static void replace(String input, String output, Map<String, String> replaceMap) {
+    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         try (InputStream in = new FileInputStream(new File(input));
              OutputStream outputStream = new FileOutputStream(output)) {
             HWPFDocument document = new HWPFDocument(in);
@@ -25,8 +25,10 @@ public class DocReplacer {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
             document.write(byteArrayOutputStream);
             outputStream.write(byteArrayOutputStream.toByteArray());
+            return true;
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return false;
     }
 }
