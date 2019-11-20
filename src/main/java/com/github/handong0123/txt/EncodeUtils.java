@@ -1,17 +1,16 @@
 package com.github.handong0123.txt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.util.BitSet;
 
 /**
- * @author handong
+ * 判断文件编码工具类
+ *
+ * @author handong0123
  */
 public class EncodeUtils {
-    private static final Logger logger = LoggerFactory.getLogger(EncodeUtils.class);
+
     private static final int BYTE_SIZE = 8;
     private static final String CODE_UTF8 = "UTF-8";
     private static final String CODE_UTF16 = "UTF-16";

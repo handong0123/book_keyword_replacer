@@ -1,5 +1,6 @@
 package com.github.handong0123.word;
 
+import com.github.handong0123.IReplacer;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -16,21 +17,16 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author handong
+ * docx文件内容替换器
+ *
+ * @author handong0123
  */
-public class DocxReplacer {
-    /**
-     * 用一个docx文档作为模板，程序替换其中的内容，再写入目标文档中。
-     *
-     * @param input
-     * @param output
-     * @param replaceMap
-     */
-    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
-        try (InputStream is = new FileInputStream(input);
-             OutputStream os = new FileOutputStream(output)) {
+public class DocxReplacer implements IReplacer {
+
+    public static boolean replace(String src, String dest, Map<String, String> replaceMap) {
+        try (InputStream is = new FileInputStream(src);
+             OutputStream os = new FileOutputStream(dest)) {
             XWPFDocument doc = new XWPFDocument(is);
-            // 替换段落里面的变量
             replaceInPara(doc, replaceMap);
             doc.write(os);
             return true;

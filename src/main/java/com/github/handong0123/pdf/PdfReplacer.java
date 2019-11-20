@@ -1,5 +1,6 @@
 package com.github.handong0123.pdf;
 
+import com.github.handong0123.IReplacer;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Rectangle;
@@ -20,28 +21,25 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * pdf替换文字工具类
+ * pdf文件内容替换器
  * <p>
  * 不足之处：
  * 替换之后的文字无法和原pdf中替换掉的文字信息一致（主要有：字体大小、样式等）
  * 某些情况下（主要是替换字体的大小）替换之后显示不是太整齐
  * 无法匹配目标文字在两页中显示的情况（例如：目标文字：替换工具，第一页页尾有替换两字，第二页页首有工具二字）
  *
- * @author handong
+ * @author handong0123
  */
-public class PdfReplacer {
-    private static final Pattern PATTERN = Pattern.compile("[\\u4e00-\\u9fa5]");
+public class PdfReplacer implements IReplacer {
 
     /**
-     * 替换pdf中的字符串
-     *
-     * @param input      原PDF
-     * @param output     新PDF
-     * @param replaceMap 替换词Map
+     * 中文正则
      */
-    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
-        Map<String, List<MatchItem>> matchResultMap = matchAll(input, new ArrayList<>(replaceMap.keySet()));
-        return manipulatePdf(input, output, matchResultMap, replaceMap);
+    private static final Pattern PATTERN = Pattern.compile("[\\u4e00-\\u9fa5]");
+
+    public static boolean replace(String src, String dest, Map<String, String> replaceMap) {
+        Map<String, List<MatchItem>> matchResultMap = matchAll(src, new ArrayList<>(replaceMap.keySet()));
+        return manipulatePdf(src, dest, matchResultMap, replaceMap);
     }
 
     /**
@@ -49,7 +47,7 @@ public class PdfReplacer {
      *
      * @param filePath    pdf目标路径
      * @param keywordList 关键词列表
-     * @return
+     * @return 搜索结果
      */
     private static Map<String, List<MatchItem>> matchAll(String filePath, List<String> keywordList) {
         Map<String, List<MatchItem>> matchResultMap = new HashMap<>(keywordList.size());
@@ -73,10 +71,10 @@ public class PdfReplacer {
     /**
      * 根据关键字、文档路径、pdf页数寻找特定的文件内容
      *
-     * @param reader
+     * @param reader pdf
      * @param pageNumber 页数
      * @param keyword    关键字
-     * @return
+     * @return 搜索结果
      */
     private static List<MatchItem> matchPage(PdfReader reader, Integer pageNumber, String keyword) {
         try {
@@ -98,9 +96,9 @@ public class PdfReplacer {
     /**
      * 找到匹配的关键词块
      *
-     * @param renderListener
-     * @param keyword
-     * @return
+     * @param renderListener 监听器
+     * @param keyword 关键词
+     * @return 搜索结果
      */
     private static List<MatchItem> findKeywordItems(KeyWordPositionListener renderListener, String keyword) {
         //先判断本页中是否存在关键词
@@ -153,6 +151,9 @@ public class PdfReplacer {
      *
      * @param src  目标pdf路径
      * @param dest 新pdf的路径
+     * @param matchItems 搜索结果
+     * @param replaceMap 替换词典
+     * @return 替换成功
      */
     private static boolean manipulatePdf(String src, String dest, Map<String, List<MatchItem>> matchItems, Map<String, String> replaceMap) {
         try (OutputStream outputStream = new FileOutputStream(dest)) {

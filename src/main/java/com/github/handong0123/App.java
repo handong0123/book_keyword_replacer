@@ -14,6 +14,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * swing界面
+ *
+ * @author handong0123
+ */
 public class App {
     private JButton buttonStart;
     private JTextField textPath;
@@ -34,6 +39,7 @@ public class App {
 
     public App() {
         buttonFileChooser.addActionListener(e -> {
+            // 路径选择器
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
             int option = fileChooser.showOpenDialog(panelWindow);
@@ -43,7 +49,9 @@ public class App {
             }
         });
         buttonStart.addActionListener(e -> {
+            // 关闭开始按钮
             buttonStart.setEnabled(false);
+            // 清空失败列表
             listResult.setListData(new Object[0]);
             String filePath = textPath.getText();
             String startNo = textStartNo.getText();
@@ -60,6 +68,7 @@ public class App {
                 JOptionPane.showMessageDialog(null, "请选择文件夹,非文件", "提醒", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            // 解析命名起始序号
             int start;
             try {
                 start = Integer.parseInt(startNo);
@@ -68,6 +77,7 @@ public class App {
                 return;
             }
             int noLength = startNo.length();
+            // 解析替换词典
             Map<String, String> replaceMap = new HashMap<>();
             String[] items = textAreaReplace.getText().split("\n");
             for (String item : items) {
@@ -82,6 +92,7 @@ public class App {
                 JOptionPane.showMessageDialog(null, "空文件夹", "提醒", JOptionPane.WARNING_MESSAGE);
                 return;
             }
+            // 开始替换任务线程
             thread = new ThreadTask(workPath, directories, noLength, start, replaceMap);
             thread.start();
         });
@@ -89,6 +100,7 @@ public class App {
     }
 
     public static void main(String[] args) {
+        // 设置UI
         try {
             UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException e) {
@@ -124,6 +136,9 @@ public class App {
     }
 
 
+    /**
+     * 替换任务线程
+     */
     class ThreadTask extends Thread {
 
         private File workPath;
@@ -159,6 +174,7 @@ public class App {
                 deleteDir(newWordPath);
                 root.mkdirs();
             }
+            // 设置进度条
             progressBar1.setMaximum(directories.length);
             progressBar1.setMinimum(0);
             for (int i = 0; i < directories.length; i++) {
@@ -177,7 +193,9 @@ public class App {
                 if (!newDirectory.mkdir()) {
                     continue;
                 }
+                //遍历文件，符合格式就进行替换
                 for (File f : files) {
+                    // 停止标记
                     if (stop) {
                         progressBar1.setIndeterminate(false);
                         JOptionPane.showMessageDialog(null, "任务已终止", "提醒", JOptionPane.WARNING_MESSAGE);
@@ -201,16 +219,18 @@ public class App {
                     } else if (fileName.toLowerCase().endsWith(".docx")) {
                         flag = DocxReplacer.replace(f.getAbsolutePath(), newDirectory.getAbsolutePath() + "/" + fileName, replaceMap);
                     }
+                    // 处理失败，添加到失败列表，该文件夹后续处理跳过
                     if (!flag) {
                         failedList.add(directory.getName());
                         listResult.setListData(failedList.toArray(new String[0]));
                         break;
                     }
-                    labelStatus.setText("完成处理:" + f.getName());
                 }
             }
-            progressBar1.setIndeterminate(false);
+            // 重置进度条
+            progressBar1.setValue(0);
             JOptionPane.showMessageDialog(null, "替换完成", "提醒", JOptionPane.WARNING_MESSAGE);
+            // 恢复开始按钮
             buttonStart.setEnabled(true);
         }
     }

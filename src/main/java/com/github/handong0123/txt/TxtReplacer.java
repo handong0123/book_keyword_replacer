@@ -8,18 +8,21 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author handong
+ * txt文件内容替换器
+ *
+ * @author handong0123
  */
 public class TxtReplacer {
 
-    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
-        try (FileWriter fileWriter = new FileWriter(output)) {
-            String encoding = EncodeUtils.getEncode(input);
+    public static boolean replace(String src, String dest, Map<String, String> replaceMap) {
+        try (FileWriter fileWriter = new FileWriter(dest)) {
+            // 判断文件编码
+            String encoding = EncodeUtils.getEncode(src);
             List<String> lineList;
             if ("GBK".equals(encoding)) {
-                lineList = Files.readAllLines(Paths.get(input), Charset.forName("GBK"));
+                lineList = Files.readAllLines(Paths.get(src), Charset.forName("GBK"));
             } else {
-                lineList = Files.readAllLines(Paths.get(input));
+                lineList = Files.readAllLines(Paths.get(src));
             }
             for (String l : lineList) {
                 String line = l;

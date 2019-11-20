@@ -10,13 +10,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 用来匹配pdf的关键词 监听类
+ * 匹配pdf关键词监听器
+ *
+ * @author handong0123
  */
 public class KeyWordPositionListener implements RenderListener {
 
-    //存放匹配上的字符信息
+    /**
+     * 存放匹配上的字符信息
+     */
     private List<MatchItem> matches = new ArrayList<>();
-    //存放所有的字符信息
+    /**
+     * 存放所有的字符信息
+     */
     private List<MatchItem> allItems = new ArrayList<>();
 
     private Rectangle curPageSize;
@@ -70,26 +76,14 @@ public class KeyWordPositionListener implements RenderListener {
         //do nothing
     }
 
-    /**
-     * 设置需要匹配的当前页
-     * @param pageNumber
-     */
     public void setPageNumber(Integer pageNumber) {
         this.pageNumber = pageNumber;
     }
 
-    /**
-     * 设置需要匹配的关键字，忽略大小写
-     * @param keyword
-     */
     public void setKeyword(String keyword) {
         this.keyword = keyword;
     }
 
-    /**
-     * 返回匹配的结果列表
-     * @return
-     */
     public List<MatchItem> getMatches() {
         return matches;
     }

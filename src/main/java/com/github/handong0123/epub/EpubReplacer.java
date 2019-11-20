@@ -1,5 +1,6 @@
 package com.github.handong0123.epub;
 
+import com.github.handong0123.IReplacer;
 import net.sf.jazzlib.ZipEntry;
 import net.sf.jazzlib.ZipException;
 import net.sf.jazzlib.ZipInputStream;
@@ -13,39 +14,34 @@ import java.io.*;
 import java.util.Map;
 
 /**
- * epub格式文件读和写示例程序
+ * epub文件内容替换器
  *
- * @author handong
+ * @author handong123
  */
-public class EpubReplacer {
+public class EpubReplacer implements IReplacer {
 
-    /**
-     * 替换EPUB文件内容
-     *
-     * @param input      原文件
-     * @param output     新文件
-     * @param replaceMap 替换词Map
-     */
-    public static boolean replace(String input, String output, Map<String, String> replaceMap) {
-        Book book = readBook(input);
+    public static boolean replace(String src, String dest, Map<String, String> replaceMap) {
+        Book book = readBook(src);
+        // 考虑到本身可能存在的文件损坏，所以这里返回true
         if (null == book) {
             return true;
         }
         modifyBook(book, replaceMap);
-        return writeBook(book, output);
+        return writeBook(book, dest);
     }
 
 
     /**
-     * 读epub文件
+     * 读取epub文件
      *
      * @return book
      */
-    private static Book readBook(String epubPath) {
+    private static Book readBook(String src) {
         EpubReader epubReader = new EpubReader();
         Book book = null;
-        try (InputStream inputStr = new FileInputStream(epubPath);
+        try (InputStream inputStr = new FileInputStream(src);
              ZipInputStream zip = new ZipInputStream(inputStr)) {
+            // 用getNextEntry方法判断epub文件是否损坏，否则会造成死循环
             try {
                 zip.getNextEntry();
             } catch (Exception e) {
@@ -85,14 +81,14 @@ public class EpubReplacer {
     }
 
     /**
-     * 输出电子书
+     * 输出epub
      *
-     * @param book     book
-     * @param fileName 新文件名
+     * @param book book
+     * @param dest 目标文件
      */
-    private static boolean writeBook(Book book, String fileName) {
+    private static boolean writeBook(Book book, String dest) {
         EpubWriter epubWriter = new EpubWriter();
-        try (OutputStream output = new FileOutputStream(fileName)) {
+        try (OutputStream output = new FileOutputStream(dest)) {
             epubWriter.write(book, output);
             return true;
         } catch (IOException e) {
