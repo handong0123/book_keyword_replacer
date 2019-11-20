@@ -28,6 +28,7 @@ public class App {
     private JProgressBar progressBar1;
     private JButton buttonStop;
     private JList listResult;
+    private JLabel labelStatus;
 
     private ThreadTask thread;
 
@@ -83,7 +84,6 @@ public class App {
             }
             thread = new ThreadTask(workPath, directories, noLength, start, replaceMap);
             thread.start();
-            progressBar1.setIndeterminate(true);
         });
         buttonStop.addActionListener(e -> thread.setStop(true));
     }
@@ -159,7 +159,11 @@ public class App {
                 deleteDir(newWordPath);
                 root.mkdirs();
             }
-            for (File directory : directories) {
+            progressBar1.setMaximum(directories.length);
+            progressBar1.setMinimum(0);
+            for (int i = 0; i < directories.length; i++) {
+                progressBar1.setValue(i);
+                File directory = directories[i];
                 if (directory.isFile()) {
                     continue;
                 }
@@ -167,7 +171,7 @@ public class App {
                 if (null == files || files.length == 0) {
                     continue;
                 }
-                String directoryName = String.format("%0" + noLength + "d", start) + directory.getName();
+                String directoryName = String.format("%0" + noLength + "d", start) + "-" + directory.getName();
                 start++;
                 File newDirectory = new File(newWordPath, directoryName);
                 if (!newDirectory.mkdir()) {
@@ -183,6 +187,7 @@ public class App {
                     if (f.isDirectory()) {
                         continue;
                     }
+                    labelStatus.setText("正在处理:" + f.getName());
                     String fileName = f.getName();
                     boolean flag = true;
                     if (fileName.toLowerCase().endsWith(".txt")) {
@@ -198,12 +203,13 @@ public class App {
                     }
                     if (!flag) {
                         failedList.add(directory.getName());
+                        listResult.setListData(failedList.toArray(new String[0]));
                         break;
                     }
+                    labelStatus.setText("完成处理:" + f.getName());
                 }
             }
             progressBar1.setIndeterminate(false);
-            listResult.setListData(failedList.toArray(new String[0]));
             JOptionPane.showMessageDialog(null, "替换完成", "提醒", JOptionPane.WARNING_MESSAGE);
             buttonStart.setEnabled(true);
         }

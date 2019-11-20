@@ -1,9 +1,13 @@
 package com.github.handong0123.epub;
 
+import net.sf.jazzlib.ZipEntry;
+import net.sf.jazzlib.ZipException;
+import net.sf.jazzlib.ZipInputStream;
 import nl.siegmann.epublib.domain.Book;
 import nl.siegmann.epublib.domain.Resource;
 import nl.siegmann.epublib.epub.EpubReader;
 import nl.siegmann.epublib.epub.EpubWriter;
+import nl.siegmann.epublib.epub.ResourcesLoader;
 
 import java.io.*;
 import java.util.Map;
@@ -24,8 +28,8 @@ public class EpubReplacer {
      */
     public static boolean replace(String input, String output, Map<String, String> replaceMap) {
         Book book = readBook(input);
-        if(null == book){
-            return false;
+        if (null == book) {
+            return true;
         }
         modifyBook(book, replaceMap);
         return writeBook(book, output);
@@ -40,13 +44,22 @@ public class EpubReplacer {
     private static Book readBook(String epubPath) {
         EpubReader epubReader = new EpubReader();
         Book book = null;
-        try (InputStream inputStr = new FileInputStream(epubPath)) {
-            book = epubReader.readEpub(inputStr);
+        try (InputStream inputStr = new FileInputStream(epubPath);
+             ZipInputStream zip = new ZipInputStream(inputStr)) {
+            try {
+                zip.getNextEntry();
+            } catch (Exception e) {
+                zip.closeEntry();
+                e.printStackTrace();
+                return null;
+            }
+            book = epubReader.readEpub(zip);
         } catch (IOException e) {
             e.printStackTrace();
         }
         return book;
     }
+
 
     /**
      * 修改电子书
@@ -56,7 +69,7 @@ public class EpubReplacer {
      */
     private static void modifyBook(Book book, Map<String, String> replaceMap) {
         for (Resource t : book.getResources().getAll()) {
-            if (t.getMediaType().getName().contains("image")) {
+            if (t.getMediaType() == null || t.getMediaType().getName() == null || t.getMediaType().getName().contains("image")) {
                 continue;
             }
             String oldHtml;
